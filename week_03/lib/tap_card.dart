@@ -8,7 +8,7 @@ class TapCard extends StatefulWidget {
 }
 
 class _TapCardState extends State<TapCard> {
-  int _taps = 0; // Наше единственное состояние
+  int _taps = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -19,18 +19,17 @@ class _TapCardState extends State<TapCard> {
             _taps++;
           });
         },
-          onLongPress: () async { // Помечаем функцию как асинхронную
-            // 1. Показываем диалог и ждем (await) его результат
+          onLongPress: () async {
             final bool? shouldReset = await showDialog<bool>(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: const Text('Reset the count?'), // Заголовок из задания
+                  title: const Text('Reset the count?'),
                   actions: [
-                    // 3. Кнопка Cancel
+
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop(false); // Закрываем диалог и возвращаем false
+                        Navigator.of(context).pop(false);
                       },
                       child: const Text('Cancel'),
                     ),
@@ -43,8 +42,6 @@ class _TapCardState extends State<TapCard> {
               },
             );
 
-            // 5. Проверяем, что ответил диалог.
-            // Если shouldReset равен true, нужно внутри setState обнулить _taps[cite: 2]
             if (shouldReset == true) {
               setState(() {
                 _taps = 0;

@@ -8,7 +8,10 @@ class InfoRow extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Padding(padding: const EdgeInsets.all(16.0),
-      child: Row(children: [Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,) ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,) ),
         Text(value)],),
     );
 

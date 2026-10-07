@@ -15,7 +15,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
           appBar: AppBar(title: const Text("My profile")),
-      body: Column(children: [
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         ProfileHeader(name: "Dias", university: "KBtu"),
         for(final fact in facts)
           InfoRow(label: fact.label, value: fact.value)
