@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'library_screen.dart';
-import 'models/book.dart';
-
+import 'api/fake_api.dart';
 void main() {
-  debugPrint('${totalPages(seed)} pages, ${unread(seed).length} unread');
-  debugPrint(
-    Book.fromMap({'title': 'X', 'author': 'Y', 'pages': 10}).toString(),
-  );
-
+  print('A');
+  Future.delayed(const Duration(seconds: 2), () => print('B'));
+  print('C');
+  final api = FakeApi();
+  api.fetchStudents().then((l) => print('${l.length} students'));
+  api.fetchStudents();
   runApp(const MyApp());
 }
 
@@ -19,6 +18,5 @@ class MyApp extends StatelessWidget {
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
     ),
-    home: const LibraryScreen(),
   );
 }

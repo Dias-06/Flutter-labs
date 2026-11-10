@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 class Student {
 
   const Student({
@@ -50,13 +51,25 @@ class FakeApi {
   final bool empty;   // true -> the server has no students
 
   int calls = 0;      // how many times fetchStudents() ran
-
+  int saveCalls = 0;
 
 
   Future<List<Student>> fetchStudents() async {
+    calls++;
+    debugPrint('fetchStudents #$calls');
+    await Future.delayed(const Duration(seconds: 2));
 
-    throw UnimplementedError(); // Level 1 replaces this
-
+    if (calls % 3 == 0) {
+      throw NoConnectionException();
+    }
+    return empty ? const [] : _seed;
+  }
+  Future<void> save(int value) async {
+    saveCalls++;
+    await Future.delayed(const Duration(seconds: 1));
+    if (saveCalls % 2 == 0) {
+      throw StateError('server rejected $value');
+    }
   }
 
 }
