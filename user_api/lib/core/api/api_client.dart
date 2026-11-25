@@ -3,31 +3,41 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../storage/secure_store.dart';
 import 'api_exception.dart';
 
+typedef Headers = Map<String, String>;
+
 class ApiClient {
-  ApiClient(this._client, {this.host = 'jsonplaceholder.typicode.com'});
+  ApiClient(
+      this._client,
+      this._store, {
+        this.host = 'jsonplaceholder.typicode.com',
+      });
 
   final http.Client _client;
+  final SecureStore _store;
   final String host;
 
-  Map<String, String> get defaultHeaders => const {
-    'Accept': 'application/json',
-  };
+  Future<Headers> _headers([Headers? extra]) async {
+    return {
+      'Accept': 'application/json',
+      if (await _store.readToken() case final t?) 'Authorization': 'Bearer $t',
+      ...?extra,
+    };
+  }
 
-  Future<dynamic> get(String path, [Map<String, String>? query]) async {
+  Future<dynamic> get(String path, [Headers? query]) async {
     final uri = Uri.https(host, path, query);
-    final response = await _send(() => _client.get(uri, headers: defaultHeaders));
+    final headers = await _headers();
+    final response = await _send(() => _client.get(uri, headers: headers));
     _check(response);
     return _decode(response);
   }
 
   Future<dynamic> post(String path, Object body) async {
     final uri = Uri.https(host, path);
-    final headers = {
-      ...defaultHeaders,
-      'Content-Type': 'application/json',
-    };
+    final headers = await _headers({'Content-Type': 'application/json'});
     final response = await _send(
           () => _client.post(uri, headers: headers, body: jsonEncode(body)),
     );

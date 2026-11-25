@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
+import '../settings/settings_model.dart';
+import '../settings/settings_screen.dart';
 import 'new_user_screen.dart';
 import 'user.dart';
 import 'user_detail_screen.dart';
@@ -13,9 +15,30 @@ class UsersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final m = context.watch<UsersModel>();
+    final selectedCity = context.watch<SettingsModel>().city;
+
+    final filteredItems = selectedCity == null
+        ? m.items
+        : m.items.where((u) => u.address.city == selectedCity).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Users')),
+      appBar: AppBar(
+        title: Text(selectedCity == null ? 'Users' : 'Users ($selectedCity)'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              unawaited(
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SettingsScreen(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           unawaited(
@@ -26,35 +49,67 @@ class UsersScreen extends StatelessWidget {
         },
         child: const Icon(Icons.add),
       ),
-      body: Builder(
-        builder: (context) {
-          if (m.loading && m.items.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          if (m.fromCache)
+            Material(
+              color: Colors.amber.shade200,
+              child: Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Saved data · no connection',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: m.load,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                if (m.loading && m.items.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          return switch (m.error) {
-            null => _UserList(items: m.items, onRefresh: m.load),
-            NoConnectionException() => _ErrorView(
-              icon: Icons.wifi_off,
-              message: 'No internet connection.\nCheck your network and try again.',
-              onRetry: m.load,
+                return switch (m.error) {
+                  null => _UserList(items: filteredItems, onRefresh: m.load),
+                  NoConnectionException() => _ErrorView(
+                    icon: Icons.wifi_off,
+                    message:
+                    'No internet connection.\nCheck your network and try again.',
+                    onRetry: m.load,
+                  ),
+                  NotFoundException() || UnauthorizedException() => _ErrorView(
+                    icon: Icons.lock_outline,
+                    message: 'Access denied or resource not found.',
+                    onRetry: m.load,
+                  ),
+                  ServerException(:final status) => _ErrorView(
+                    icon: Icons.cloud_off,
+                    message: 'Server error ($status). Please try later.',
+                    onRetry: m.load,
+                  ),
+                  BadResponseException() => const _ErrorView(
+                    icon: Icons.bug_report,
+                    message: 'Unexpected data format from server.',
+                  ),
+                };
+              },
             ),
-            NotFoundException() || UnauthorizedException() => _ErrorView(
-              icon: Icons.lock_outline,
-              message: 'Access denied or resource not found.',
-              onRetry: m.load,
-            ),
-            ServerException(:final status) => _ErrorView(
-              icon: Icons.cloud_off,
-              message: 'Server error ($status). Please try later.',
-              onRetry: m.load,
-            ),
-            BadResponseException() => const _ErrorView(
-              icon: Icons.bug_report,
-              message: 'Unexpected data format from server.',
-            ),
-          };
-        },
+          ),
+        ],
       ),
     );
   }
